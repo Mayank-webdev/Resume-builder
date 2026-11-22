@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
 import streamlit as st
 from database import (
     init_db, create_user, authenticate_user, save_resume,
@@ -11,39 +12,47 @@ from resume_utils import (
     render_resume_html, generate_ai_text
 )
 from pdf_utils import create_resume_pdf
+from resume_wizard import render_resume_wizard, edit_saved
+from extra_pages import (
+    init_extra_tables, load_css, count_applications, render_cover_letter,
+    render_job_tracker, render_interview_prep, render_dashboard, render_linkedin, render_checklist
+)
 
 st.set_page_config(page_title="CareerForge | AI Resume Studio", page_icon="🚀", layout="wide")
 init_db()
-
-st.markdown("""
-<style>
-.stApp {background:linear-gradient(145deg,#0b1020,#121b30);color:#eef2ff}
-[data-testid="stSidebar"] {background:#111a2b}
-.block-container {max-width:1250px;padding-top:2rem}
-h1,h2,h3 {color:#a8c7ff}
-div[data-testid="stMetric"] {background:#18243a;padding:15px;border:1px solid #263b5d;border-radius:14px}
-.stButton>button,.stDownloadButton>button {border-radius:9px;font-weight:650}
-div[data-testid="stForm"] {border:1px solid #2a3c59;border-radius:14px;padding:18px}
-</style>
-""", unsafe_allow_html=True)
+init_extra_tables()
+load_css(os.path.join(os.path.dirname(__file__), "style.css"))
 
 # ---------------- Authentication ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
 
 if st.session_state.user is None:
-    st.title("🚀 CareerForge")
-    st.caption("AI Career & Resume Studio")
-    tab_login, tab_register = st.tabs(["Login", "Create account"])
+    left, right = st.columns([1.15, 1], gap="large")
+    with left:
+        st.markdown(
+            '<div class="cf-brand">'
+            '<div class="cf-logo">🚀 CareerForge</div>'
+            '<div class="cf-headline">Turn your experience into interviews.</div>'
+            '<p class="cf-lede">Build the resume, match it to the job, and track every application in one place.</p>'
+            '<div class="cf-feat"><b>Resume builder</b>Three templates with one-click PDF download</div>'
+            '<div class="cf-feat"><b>ATS analyzer</b>See which job keywords your resume is missing</div>'
+            '<div class="cf-feat"><b>Application toolkit</b>Cover letters, interview prep and a job tracker</div>'
+            '<p class="cf-note">Your data stays in a local SQLite database on your computer.</p>'
+            '</div>', unsafe_allow_html=True)
+    right.markdown('<div class="cf-welcome">Welcome back</div>'
+                   '<div class="cf-welcome-sub">Log in, or create an account to get started.</div>',
+                   unsafe_allow_html=True)
+    tab_login, tab_register = right.tabs(["Login", "Create account"])
     with tab_login:
         with st.form("login_form"):
-            login_email = st.text_input("Email")
-            login_password = st.text_input("Password", type="password")
+            login_email = st.text_input("Email", placeholder="you@example.com")
+            login_password = st.text_input("Password", type="password", placeholder="Your password")
             login_submit = st.form_submit_button("Login", use_container_width=True)
         if login_submit:
-            user = authenticate_user(login_email, login_password)
-            if user:
-                st.session_state.user = user
+            found = authenticate_user(login_email, login_password)
+            if found:
+                st.session_state.user = found
                 st.rerun()
             else:
                 st.error("Email or password is incorrect.")
@@ -70,78 +79,31 @@ if st.session_state.user is None:
     st.stop()
 
 user = st.session_state.user
+uid = str(user["id"])
+
 st.sidebar.title("🚀 CareerForge")
 st.sidebar.caption(f"Signed in as {user['name']}")
-page = st.sidebar.radio("WORKSPACE", [
+page = st.sidebar.radio("Workspace", [
     "Dashboard", "Resume Builder", "ATS Analyzer",
-    "AI Writing Assistant", "Skill Gap Planner", "My Resumes"
-])
+    "AI Writing Assistant", "Skill Gap Planner", "My Resumes",
+    "Cover Letter", "Job Tracker", "Interview Prep",
+    "LinkedIn Optimizer", "Resume Checklist",
+], key="page")
 if st.sidebar.button("Log out", use_container_width=True):
     st.session_state.user = None
     st.rerun()
 st.sidebar.divider()
 st.sidebar.caption("Local prototype • SQLite")
 
-st.title("CareerForge — AI Career & Resume Studio")
-st.caption("Build a resume, tailor it to a job, and plan your next skills.")
-st.divider()
-
 if page == "Dashboard":
-    resumes = list_resumes(user["id"])
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Your saved resumes", len(resumes))
-    c2.metric("Resume templates", "3")
-    c3.metric("Career tools", "3")
-    st.subheader(f"Welcome, {user['name']} 👋")
-    st.write("Start with Resume Builder, then use ATS Analyzer to compare your resume with a job description.")
-    st.info("AI provider is optional. Add an OpenAI API key in your local `.env` file to enable generated writing. Without it, built-in rule-based helpers still work.")
-    st.markdown("**Suggested workflow**")
-    st.write("1. Create your resume.  2. Download or save it.  3. Paste a target job description into ATS Analyzer.  4. Improve only the gaps that accurately reflect your experience.")
+    render_dashboard(user, len(list_resumes(user["id"])))
 
 elif page == "Resume Builder":
-    st.subheader("Create / update your resume")
-    with st.form("resume_form"):
-        c1, c2 = st.columns(2)
-        with c1:
-            name = st.text_input("Full name")
-            email = st.text_input("Email")
-            phone = st.text_input("Phone")
-            location = st.text_input("City / location")
-            role = st.text_input("Target job title", placeholder="e.g. Junior Python Developer")
-        with c2:
-            template = st.selectbox("Design template", ["Modern", "Simple", "Creative"])
-            education = st.text_area("Education", placeholder="Course, institute, year, relevant coursework...")
-            skills = st.text_area("Skills", placeholder="Python, HTML, CSS, SQL...")
-        summary = st.text_area("Professional summary", height=100)
-        projects = st.text_area("Projects", height=120, placeholder="Project name, what you built, tools used, measurable result...")
-        experience = st.text_area("Experience / internship", height=100)
-        certifications = st.text_area("Certifications / achievements", height=80)
-        languages = st.text_input("Languages")
-        submitted = st.form_submit_button("Generate resume preview", use_container_width=True)
-    if submitted:
-        if not name.strip() or not email.strip():
-            st.error("Full name and email are required.")
-        else:
-            if not summary.strip():
-                summary = make_summary(name, role, skills, education)
-            st.session_state.resume_draft = {
-                "name": name.strip(), "email": email.strip(), "phone": phone.strip(),
-                "location": location.strip(), "role": role.strip(), "template": template,
-                "education": education.strip(), "skills": skills.strip(), "summary": summary.strip(),
-                "projects": projects.strip(), "experience": experience.strip(),
-                "certifications": certifications.strip(), "languages": languages.strip()
-            }
-    data = st.session_state.get("resume_draft")
-    if data:
-        st.subheader("Preview")
-        st.components.v1.html(render_resume_html(data), height=850, scrolling=True)
-        st.download_button("⬇️ Download PDF", create_resume_pdf(data), "careerforge_resume.pdf", "application/pdf", use_container_width=True)
-        if st.button("💾 Save to my account", use_container_width=True):
-            rid = save_resume(user["id"], data)
-            st.success(f"Resume saved to your account (ID {rid}).")
+    render_resume_wizard(user, create_resume_pdf, save_resume)
 
 elif page == "ATS Analyzer":
-    st.subheader("ATS / job-description match analyzer")
+    st.title("ATS Analyzer")
+    st.caption("Compare your resume with a job description.")
     resume_text = st.text_area("Paste your resume text", height=230)
     job_text = st.text_area("Paste the target job description", height=230)
     if st.button("Analyze match", type="primary"):
@@ -154,17 +116,19 @@ elif page == "ATS Analyzer":
             a, b = st.columns(2)
             with a:
                 st.markdown("**Keywords found**")
-                st.write(", ".join(result["matched"]) or "None detected")
+                st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["matched"]) or "None detected",
+                            unsafe_allow_html=True)
             with b:
                 st.markdown("**Potential missing keywords**")
-                st.write(", ".join(result["missing"]) or "No missing keywords detected")
+                st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["missing"]) or "No missing keywords detected",
+                            unsafe_allow_html=True)
             st.markdown("**Suggestions**")
             for suggestion in result["suggestions"]:
                 st.write("• " + suggestion)
             st.caption("This is a transparent keyword-coverage estimate, not a real vendor ATS score. It does not judge truthfulness, seniority, formatting or semantic relevance.")
 
 elif page == "AI Writing Assistant":
-    st.subheader("AI writing assistant")
+    st.title("AI Writing Assistant")
     mode = st.selectbox("Choose a tool", ["Professional summary", "Improve a bullet point", "Tailor a summary to a job"])
     if mode == "Professional summary":
         candidate = st.text_input("Name")
@@ -197,7 +161,8 @@ elif page == "AI Writing Assistant":
                 st.info("Showing the built-in fallback. Configure OPENAI_API_KEY to enable API-generated text.")
 
 elif page == "Skill Gap Planner":
-    st.subheader("Role-based learning planner")
+    st.title("Skill Gap Planner")
+    st.caption("Role-based learning planner.")
     target_role = st.selectbox("Target role", [
         "Python Developer", "Web Developer", "Data Analyst",
         "Data Scientist", "AI / ML Engineer"
@@ -212,7 +177,7 @@ elif page == "Skill Gap Planner":
         st.caption("Suggestions are a starter checklist. Compare them with real job postings and your current level.")
 
 elif page == "My Resumes":
-    st.subheader("Your saved resumes")
+    st.title("My Resumes")
     rows = list_resumes(user["id"])
     if not rows:
         st.info("No saved resumes yet. Create one in Resume Builder.")
@@ -223,6 +188,19 @@ elif page == "My Resumes":
             if saved:
                 st.write(saved)
                 st.download_button("Download PDF", create_resume_pdf(saved), f"resume_{rid}.pdf", "application/pdf", key=f"pdf_{rid}")
+                st.button("Edit in Resume Builder", key=f"edit_saved_{rid}", on_click=edit_saved, args=(saved, rid, user["id"]))
             if st.button("Delete resume", key=f"delete_{rid}"):
                 delete_resume(user["id"], rid)
-                st.success("Deleted. Refresh this page to update the list.")
+                st.rerun()
+
+# ---------------- New pages ----------------
+elif page == "Cover Letter":
+    render_cover_letter(user["name"])
+elif page == "Job Tracker":
+    render_job_tracker(uid)
+elif page == "Interview Prep":
+    render_interview_prep()
+elif page == "LinkedIn Optimizer":
+    render_linkedin()
+elif page == "Resume Checklist":
+    render_checklist()

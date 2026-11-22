@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --ink: #0d1422;
+  --panel: #151f33;
+  --panel-2: #1b2842;
+  --line: #2a3a5a;
+  --text: #e7ecf5;
+  --muted: #94a3bd;
+  --forge: #f2a33a;      /* the one accent: heated metal */
+  --forge-dark: #d9871a;
+  --steel: #7fb3ff;
+}
+
+html, body, [class*="css"], .stApp {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
+}
+.stApp { background: var(--ink); }
+[data-testid="stHeader"] { background: transparent; }
+#MainMenu, footer { visibility: hidden; }
+.block-container { max-width: 1040px; padding-top: 2.2rem; padding-bottom: 4rem; }
+
+/* Headings */
+h1, h2, h3 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; letter-spacing: -0.02em; }
+h1 { font-weight: 800; font-size: 2.3rem; }
+h1::after {
+  content: ""; display: block; width: 64px; height: 4px; margin-top: .6rem;
+  background: var(--forge); border-radius: 2px;
+}
+h2 { font-weight: 700; margin-top: 1.6rem; }
+p, li, label { line-height: 1.65; }
+.stCaption, small { color: var(--muted) !important; }
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+[data-testid="stSidebar"] h1 { font-size: 1.4rem; }
+[data-testid="stSidebar"] h1::after { display: none; }
+[data-testid="stSidebar"] [role="radiogroup"] { gap: .15rem; }
+[data-testid="stSidebar"] [role="radiogroup"] label {
+  padding: .5rem .75rem; border-radius: 8px; border-left: 3px solid transparent;
+  transition: background .15s ease;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover { background: var(--panel-2); }
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+  background: var(--panel-2); border-left-color: var(--forge); font-weight: 600;
+}
+/* hide the default radio dot */
+[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child { display: none; }
+
+/* Metric cards */
+[data-testid="stMetric"] {
+  background: var(--panel); border: 1px solid var(--line);
+  border-left: 4px solid var(--forge); border-radius: 10px; padding: 1rem 1.2rem;
+}
+[data-testid="stMetricValue"] { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; }
+[data-testid="stMetricLabel"] { color: var(--muted); }
+
+/* Buttons */
+.stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button {
+  background: var(--forge); color: #1a1205; font-weight: 600; border: none;
+  border-radius: 8px; padding: .55rem 1.2rem; transition: background .15s ease, transform .1s ease;
+}
+.stButton > button:hover, .stDownloadButton > button:hover,
+[data-testid="stFormSubmitButton"] > button:hover { background: var(--forge-dark); color: #1a1205; }
+.stButton > button:active { transform: translateY(1px); }
+.stButton > button:focus-visible { outline: 2px solid var(--steel); outline-offset: 2px; }
+[data-testid="stSidebar"] .stButton > button {
+  background: transparent; color: var(--text); border: 1px solid var(--line);
+}
+[data-testid="stSidebar"] .stButton > button:hover { border-color: var(--forge); background: var(--panel-2); }
+
+/* Inputs */
+.stTextInput input, .stTextArea textarea, .stNumberInput input,
+.stSelectbox [data-baseweb="select"] > div, .stDateInput input {
+  background: var(--panel) !important; border: 1px solid var(--line) !important;
+  border-radius: 8px !important; color: var(--text) !important;
+}
+.stTextInput input:focus, .stTextArea textarea:focus {
+  border-color: var(--forge) !important; box-shadow: 0 0 0 1px var(--forge) !important;
+}
+
+/* Tabs, expanders, alerts, tables */
+.stTabs [data-baseweb="tab-list"] { gap: .4rem; border-bottom: 1px solid var(--line); }
+.stTabs [data-baseweb="tab"] { padding: .6rem 1rem; color: var(--muted); }
+.stTabs [aria-selected="true"] { color: var(--text); }
+.stTabs [data-baseweb="tab-highlight"] { background: var(--forge); }
+[data-testid="stExpander"] {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+[data-testid="stAlert"] { border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+[data-testid="stDataFrame"] { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stProgress > div > div > div > div { background: var(--forge); }
+hr { border-color: var(--line); }
+
+/* Custom helper classes used by extra_pages.py */
+.cf-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 1.2rem 1.4rem; margin: .6rem 0;
+}
+.cf-letter {
+  background: #f6f3ec; color: #1d2330; border-radius: 6px; padding: 2rem 2.4rem;
+  font-family: Georgia, 'Times New Roman', serif; line-height: 1.75; white-space: pre-wrap;
+}
+.cf-tag {
+  display: inline-block; padding: .15rem .6rem; margin: .15rem .2rem .15rem 0;
+  border: 1px solid var(--line); border-radius: 999px; font-size: .82rem; color: var(--steel);
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.8rem; }
+  .cf-letter { padding: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Dashboard polish ---------- */
+.stApp {
+  background-color: var(--ink);
+  background-image: radial-gradient(rgba(127,179,255,.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.cf-hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(120deg, #1d2c4b 0%, #151f33 70%);
+  border: 1px solid var(--line); border-radius: 16px; padding: 1.8rem 2rem; margin: .4rem 0 1.4rem;
+}
+.cf-hero::before {
+  content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(242,163,58,.45), transparent 65%);
+}
+.cf-hero h2 { margin: 0 0 .3rem; font-size: 2rem; position: relative; }
+.cf-hero p { margin: 0; color: var(--muted); font-size: 1.02rem; position: relative; }
+.cf-step { padding: .45rem .8rem; margin: .3rem 0; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); }
+.cf-step.done { color: var(--text); border-left: 3px solid var(--forge); }
+[data-testid="stMetric"] { transition: transform .15s ease, border-color .15s ease; }
+[data-testid="stMetric"]:hover { transform: translateY(-2px); border-color: var(--forge); }
+[data-testid="stMetricValue"] { font-size: 2.2rem; }
+.stButton > button[kind="secondary"] { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+.stButton > button[kind="secondary"]:hover { border-color: var(--forge); background: var(--panel); color: var(--text); }
+
+/* ---------- Login page ---------- */
+.cf-brand { padding: 3rem 1rem 0 0; }
+.cf-logo { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 1.3rem; margin-bottom: 2.2rem; }
+.cf-headline {
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 3rem; line-height: 1.08; letter-spacing: -0.03em; margin-bottom: 1rem;
+}
+.cf-lede { color: var(--muted); font-size: 1.08rem; max-width: 30rem; margin-bottom: 1.8rem; }
+.cf-feat {
+  border-left: 3px solid var(--forge); padding: .2rem 0 .2rem 1rem; margin: 1rem 0;
+  color: var(--muted); max-width: 30rem;
+}
+.cf-feat b { display: block; color: var(--text); font-size: 1.02rem; }
+.cf-note { color: var(--muted); font-size: .85rem; margin-top: 2.2rem; }
+.cf-welcome { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 1.7rem; margin-top: 3rem; }
+.cf-welcome-sub { color: var(--muted); margin-bottom: .6rem; }
+div[data-testid="stForm"] {
+  background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--forge);
+  border-radius: 14px; padding: 1.4rem;
+  box-shadow: 0 18px 40px -22px rgba(0,0,0,.7), 0 0 60px -30px rgba(242,163,58,.35);
+}
+@media (max-width: 900px) { .cf-headline { font-size: 2.1rem; } .cf-brand { padding-top: 1rem; } .cf-welcome { margin-top: 1rem; } }
+
+/* ---------- Resume wizard ---------- */
+.cf-steps { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.cf-steps span { padding: .3rem .8rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .85rem; }
+.cf-steps .done { color: var(--text); border-color: var(--forge); }
+.cf-steps .cur { background: var(--forge); color: #1a1205; border-color: var(--forge); font-weight: 600; }
+[data-testid="stVerticalBlockBorderWrapper"] { border-color: var(--line) !important; border-radius: 12px !important; }
+
+/* step buttons act as tabs */
+[class*="st-key-jump_"] button { padding: .35rem .1rem; font-size: .8rem; border-radius: 999px; min-height: 0; }
