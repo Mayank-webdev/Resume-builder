@@ -210,7 +210,7 @@ def _exp_entries():
                 st.warning("The end date is before the start date.")
             e["bullets"] = st.text_area("Achievements (one per line)", key=k("bullets"), height=120,
                                         placeholder="Increased monthly sales by 10% through upselling")
-            _enh_buttons(k("bullets"), "bullets", f"exp_{i}")
+            _enh_buttons(k("bullets"), "bullets", f"exp_{i}", k("title"))
             if len(D["exp"]) > 1 and st.button("Remove this job", key=f"rm_exp_{i}"):
                 D["exp"].pop(i)
                 for key in [key for key in st.session_state if key.startswith(("exp_", "orig_exp_"))]:
@@ -351,7 +351,8 @@ TASKS = {
 
 
 def _enhance(key, kind):
-    from resume_utils import generate_ai_text, improve_bullet
+    import ai_helper
+    from resume_utils import improve_bullet
     text = st.session_state.get(key, "").strip()
     if not text:
         st.session_state.wz_msg = "Write something first, then enhance it."
@@ -360,12 +361,28 @@ def _enhance(key, kind):
         fallback = text
     else:
         fallback = "\n".join(improve_bullet(l.strip(" -•*\t")) for l in text.splitlines() if l.strip(" -•*\t"))
-    result, used = generate_ai_text(TASKS["summary" if kind == "summary" else "bullets"], text, fallback)
+    result, used = ai_helper.ask(TASKS["summary" if kind == "summary" else "bullets"], text, fallback)
     st.session_state[f"orig_{key}"] = text
     st.session_state[key] = (result or text).strip()
     st.session_state.wz_msg = ("Enhanced with AI. Read it through and make sure every line is true." if used else
-                               "No AI key found, so the built-in rewriter was used. Add OPENAI_API_KEY to your .env file "
-                               "for much stronger rewrites.")
+                               f"AI is not connected ({ai_helper.last_error}), so only the basic rewriter was used. "
+                               "Open AI Resume Coach in the sidebar to set it up.")
+
+
+def _suggest(title_key, bullets_key):
+    import ai_helper
+    title = st.session_state.get(title_key, "").strip()
+    if not title:
+        st.session_state.wz_msg = "Enter a job title first."
+        return
+    text, used = ai_helper.ask("Write 4 resume bullet ideas for this job title. Start each with a strong action verb. "
+                               "Write [X] wherever a number would go. One per line, no numbering.", title, "")
+    if not used:
+        st.session_state.wz_msg = f"AI is not connected ({ai_helper.last_error}). Open AI Resume Coach in the sidebar to set it up."
+        return
+    cur = st.session_state.get(bullets_key, "").strip()
+    st.session_state[bullets_key] = (cur + "\n" if cur else "") + text.strip()
+    st.session_state.wz_msg = "Draft ideas added. Replace every [X] and edit each line so it matches what you really did."
 
 
 def _undo(key):
@@ -373,11 +390,13 @@ def _undo(key):
         st.session_state[key] = st.session_state.pop(f"orig_{key}")
 
 
-def _enh_buttons(key, kind, tag):
-    c1, c2, _ = st.columns([1.4, 1, 2])
+def _enh_buttons(key, kind, tag, title_key=None):
+    c1, c2, c3 = st.columns([2.2, 1, 2])
     c1.button("✨ Enhance with AI", key=f"enh_{tag}", on_click=_enhance, args=(key, kind))
     if f"orig_{key}" in st.session_state:
         c2.button("Undo", key=f"undo_{tag}", on_click=_undo, args=(key,))
+    if title_key:
+        c3.button("Suggest ideas", key=f"sug_{tag}", on_click=_suggest, args=(title_key, key))
 
 
 def _parse_saved(saved):
@@ -488,7 +507,8 @@ def _gallery(D):
 
 
 def render_resume_wizard(user, create_resume_pdf, save_resume):
-    from resume_utils import generate_ai_text, make_summary
+    from ai_helper import ask as generate_ai_text
+    from resume_utils import make_summary
 
     D = _D()
     D.setdefault("design", "banner")

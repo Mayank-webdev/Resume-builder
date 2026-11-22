@@ -8,9 +8,13 @@ from database import (
     list_resumes, get_resume, delete_resume
 )
 from resume_utils import (
-    ats_match, make_summary, improve_bullet, skill_gap,
-    render_resume_html, generate_ai_text
+    make_summary, improve_bullet, skill_gap,
+    render_resume_html
 )
+from ai_helper import ask as generate_ai_text
+from ats_engine import ats_match, use_built_resume
+import ai_helper
+from ai_coach import render_ai_coach
 from pdf_utils import create_resume_pdf
 from resume_wizard import render_resume_wizard, edit_saved
 from extra_pages import (
@@ -83,8 +87,9 @@ uid = str(user["id"])
 
 st.sidebar.title("🚀 CareerForge")
 st.sidebar.caption(f"Signed in as {user['name']}")
+st.sidebar.caption("AI: " + (ai_helper.status() or "not connected"))
 page = st.sidebar.radio("Workspace", [
-    "Dashboard", "Resume Builder", "ATS Analyzer",
+    "Dashboard", "AI Resume Coach", "Resume Builder", "ATS Analyzer",
     "AI Writing Assistant", "Skill Gap Planner", "My Resumes",
     "Cover Letter", "Job Tracker", "Interview Prep",
     "LinkedIn Optimizer", "Resume Checklist",
@@ -104,7 +109,8 @@ elif page == "Resume Builder":
 elif page == "ATS Analyzer":
     st.title("ATS Analyzer")
     st.caption("Compare your resume with a job description.")
-    resume_text = st.text_area("Paste your resume text", height=230)
+    st.button("Use my resume from Resume Builder", on_click=use_built_resume)
+    resume_text = st.text_area("Paste your resume text", height=230, key="ats_resume")
     job_text = st.text_area("Paste the target job description", height=230)
     if st.button("Analyze match", type="primary"):
         if not resume_text.strip() or not job_text.strip():
@@ -119,9 +125,12 @@ elif page == "ATS Analyzer":
                 st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["matched"]) or "None detected",
                             unsafe_allow_html=True)
             with b:
-                st.markdown("**Potential missing keywords**")
-                st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["missing"]) or "No missing keywords detected",
+                st.markdown("**Missing skills (most important)**")
+                st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["missing_skills"]) or "None - every skill in the job is covered",
                             unsafe_allow_html=True)
+                if result["other_missing"]:
+                    st.markdown("**Other missing keywords**")
+                    st.markdown("".join(f'<span class="cf-tag">{k}</span>' for k in result["other_missing"]), unsafe_allow_html=True)
             st.markdown("**Suggestions**")
             for suggestion in result["suggestions"]:
                 st.write("• " + suggestion)
@@ -204,3 +213,5 @@ elif page == "LinkedIn Optimizer":
     render_linkedin()
 elif page == "Resume Checklist":
     render_checklist()
+elif page == "AI Resume Coach":
+    render_ai_coach()

@@ -6,7 +6,10 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-DB_PATH = "careerforge.db"  # <- change to the SQLite file your app already uses
+try:
+    from database import DB_PATH  # same SQLite file as the rest of the app
+except ImportError:
+    DB_PATH = "careerforge.db"
 STATUSES = ["Wishlist", "Applied", "Interview", "Offer", "Rejected"]
 
 
@@ -36,19 +39,16 @@ def load_css(path="style.css"):
 
 
 def ai_generate(prompt):
-    """Returns generated text, or None when no OpenAI key is set (rule-based fallback is used)."""
-    key = os.getenv("OPENAI_API_KEY")
-    if not key:
+    """Returns generated text from whichever AI is set up in .env, or None (a built-in template is used instead)."""
+    import ai_helper
+    if not ai_helper.status():
         return None
     try:
-        from openai import OpenAI
-
-        r = OpenAI(api_key=key).chat.completions.create(
-            model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
-        )
-        return r.choices[0].message.content
-    except Exception as e:  # network, quota, bad key...
-        st.warning(f"AI request failed, using the built-in template instead. ({e})")
+        return ai_helper.chat([{"role": "user", "content": prompt}],
+                              system="You are a careful professional writer. Never invent facts, numbers or experience.",
+                              max_tokens=900)
+    except Exception as e:
+        st.warning(f"The AI request failed, so the built-in template was used instead. ({str(e)[:200]})")
         return None
 
 
