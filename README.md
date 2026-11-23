@@ -10,7 +10,7 @@ A local Streamlit resume-builder learning project.
 - Job-description keyword coverage analyzer (transparent heuristic, not a commercial ATS score)
 - Professional-summary and bullet-point writing helpers
 - Role-based starter skill-gap checklist
-- Optional OpenAI-powered writing suggestions; built-in fallback works without an API key
+- Gemini-powered AI Resume Coach and writing suggestions; built-in fallback works without an API key
 
 ## Requirements
 - Windows 10/11
@@ -32,13 +32,13 @@ py -m streamlit run app.py
 
 If PowerShell blocks activation, skip the activation line and run the two `py -m pip` / `py -m streamlit` commands. Open the Local URL shown in the terminal, usually `http://localhost:8501`.
 
-## Optional OpenAI setup
+## Gemini AI setup
 1. Copy `.env.example` and rename the copy to `.env`.
-2. Add your own key: `OPENAI_API_KEY=your_key_here`.
-3. Optionally set `OPENAI_MODEL=gpt-4.1-mini`.
+2. Add your own key: `GEMINI_API_KEY=your_key_here`.
+3. Optionally set `GEMINI_MODEL=gemini-flash-latest (optional; omit to use automatic model discovery)`.
 4. Restart Streamlit.
 
-Never share your API key or commit `.env` to GitHub. API usage may cost money. Without a key, the app uses local rule-based writing helpers.
+Never share your API key or commit `.env` to GitHub. API usage may cost money. Without a key, AI features show a clear setup message or local fallback where supported.
 
 ## Data storage
 The app creates `careerforge.db` in this folder on first run. It stores account and resume data locally on this computer. Back up this file if you need to preserve your records.
@@ -46,5 +46,5 @@ The app creates `careerforge.db` in this folder on first run. It stores account 
 ## Important limitations
 - ATS result is keyword coverage only; it is not a real ATS vendor score and does not assess semantic fit.
 - Skill-gap suggestions are a small curated starter list, not a full labor-market analysis.
-- AI writing requires your own OpenAI API key and may incur charges.
-- This is a local academic/minor-project prototype, not a production-hosted service. It has no email verification, password reset, cloud sync, payment gateway or deployment configuration.
+- AI writing requires your own Gemini API key and may incur charges.
+- This is an academic/minor-project prototype. Streamlit Cloud deployment requires GEMINI_API_KEY in App settings → Secrets. SQLite on ephemeral hosting is not durable; use a managed database for production. Gmail OAuth currently requires additional cloud OAuth configuration.
