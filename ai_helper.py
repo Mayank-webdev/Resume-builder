@@ -17,7 +17,7 @@ def _cfg():
     key = os.getenv("GEMINI_API_KEY", "").strip()
     if not key:
         return None, None
-    model = (os.getenv("GEMINI_MODEL") or os.getenv("AI_MODEL") or _cached_model or "gemini-2.5-flash-lite").strip()
+    model = (os.getenv("GEMINI_MODEL") or os.getenv("AI_MODEL") or _cached_model or "gemini-3.5-flash-lite").strip()
     return "Gemini", model
 
 
@@ -91,7 +91,7 @@ def _call(messages, system="", max_tokens=1000):
             last = exc
             code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
             message = str(exc).lower()
-            if (code == 404 or "not found" in message) and not os.getenv("GEMINI_MODEL") and not os.getenv("AI_MODEL") and attempt == 0:
+            if (code == 404 or "not found" in message) and attempt == 0:
                 model = _discover_gemini(client)
                 continue
             if (code in (429, 500, 502, 503, 504) or any(x in message for x in ("429", "503", "resource_exhausted", "unavailable"))) and attempt < 4:
@@ -115,7 +115,7 @@ def chat(messages, system="", max_tokens=1000):
         elif "api key" in low or "invalid_argument" in low or "unauthenticated" in low or "401" in low:
             hint = " Check GEMINI_API_KEY in Streamlit Cloud Secrets. Create/copy it from Google AI Studio; never paste it into chat."
         elif "404" in low or "not found" in low:
-            hint = " The selected Gemini model is unavailable to this key. Remove GEMINI_MODEL to use automatic model discovery."
+            hint = " The selected Gemini model is unavailable to this key. The app will try automatic model discovery; if this persists, set GEMINI_MODEL to gemini-3.5-flash-lite in Streamlit Secrets."
         raise RuntimeError(f"{type(exc).__name__}: {message[:220]}{hint}") from exc
 
 
