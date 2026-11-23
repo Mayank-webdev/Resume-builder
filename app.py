@@ -42,7 +42,7 @@ if st.session_state.user is None:
             '<div class="cf-feat"><b>Resume builder</b>Three templates with one-click PDF download</div>'
             '<div class="cf-feat"><b>ATS analyzer</b>See which job keywords your resume is missing</div>'
             '<div class="cf-feat"><b>Application toolkit</b>Cover letters, interview prep and a job tracker</div>'
-            '<p class="cf-note">Your data stays in a local SQLite database on your computer.</p>'
+            '<p class="cf-note">This hosted prototype uses SQLite storage. Avoid storing sensitive personal data.</p>'
             '</div>', unsafe_allow_html=True)
     right.markdown('<div class="cf-welcome">Welcome back</div>'
                    '<div class="cf-welcome-sub">Log in, or create an account to get started.</div>',
@@ -87,7 +87,7 @@ uid = str(user["id"])
 
 st.sidebar.title("🚀 CareerForge")
 st.sidebar.caption(f"Signed in as {user['name']}")
-st.sidebar.caption("AI: " + (ai_helper.status() or "not connected"))
+st.sidebar.caption("AI: " + (ai_helper.status() or "not connected"))\nif not ai_helper.status():\n    st.sidebar.warning("Add GEMINI_API_KEY in Streamlit Cloud → App settings → Secrets.")
 page = st.sidebar.radio("Workspace", [
     "Dashboard", "AI Resume Coach", "Resume Builder", "ATS Analyzer",
     "AI Writing Assistant", "Skill Gap Planner", "My Resumes",
@@ -167,7 +167,7 @@ elif page == "AI Writing Assistant":
             if used_ai:
                 st.success("Generated with the configured AI provider.")
             else:
-                st.info("Showing the built-in fallback. Configure OPENAI_API_KEY to enable API-generated text.")
+                st.info("Showing the built-in fallback. Configure GEMINI_API_KEY in Streamlit Cloud → App settings → Secrets to enable Gemini.")
 
 elif page == "Skill Gap Planner":
     st.title("Skill Gap Planner")
