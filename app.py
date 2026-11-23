@@ -87,7 +87,9 @@ uid = str(user["id"])
 
 st.sidebar.title("🚀 CareerForge")
 st.sidebar.caption(f"Signed in as {user['name']}")
-st.sidebar.caption("AI: " + (ai_helper.status() or "not connected"))\nif not ai_helper.status():\n    st.sidebar.warning("Add GEMINI_API_KEY in Streamlit Cloud → App settings → Secrets.")
+st.sidebar.caption("AI: " + (ai_helper.status() or "not connected"))
+if not ai_helper.status():
+    st.sidebar.warning("Add GEMINI_API_KEY in Streamlit Cloud → App settings → Secrets.")
 page = st.sidebar.radio("Workspace", [
     "Dashboard", "AI Resume Coach", "Resume Builder", "ATS Analyzer",
     "AI Writing Assistant", "Skill Gap Planner", "My Resumes",
